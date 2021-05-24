@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FastWayOfCrossRoad">
-        <activity android:name=".AddCrossRoad"></activity>
+        <activity android:name=".SettingCrossRoad"></activity>
+        <activity android:name=".AddCrossRoad" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
