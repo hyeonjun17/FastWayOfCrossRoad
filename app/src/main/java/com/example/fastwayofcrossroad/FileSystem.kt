@@ -23,11 +23,14 @@ class FileSystem (val filepath : String) {
         var counter = 0
         var list_counter = 0
         var name : String? = null
+        var time : Int? = null
         var roadnums = IntArray(4)
         var crosswalknums = IntArray(4)
 
         temp = buffer.readLine()
         name = temp
+        temp = buffer.readLine()
+        time = temp.toInt()
         for(index in 0..3) {
             temp = buffer.readLine()
             roadnums[index] = temp.toInt()
@@ -38,7 +41,7 @@ class FileSystem (val filepath : String) {
         }
         buffer.close()
 
-        return  CrossRoad(temp, roadnums, crosswalknums)
+        return  CrossRoad(temp, time, roadnums, crosswalknums)
     }
 
     fun writeFile (crossRoad : CrossRoad?) : Boolean {
@@ -54,6 +57,8 @@ class FileSystem (val filepath : String) {
 
         var string = ""
         string = crossRoad.name + '\n'
+        string += crossRoad.time.toString()
+        string += '\n'
         for(index in 0..3) {
             string += crossRoad.roadnums[index]
             string += '\n'

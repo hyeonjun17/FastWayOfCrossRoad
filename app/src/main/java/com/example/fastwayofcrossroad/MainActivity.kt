@@ -16,6 +16,8 @@ class MainActivity : AppCompatActivity() {
 
         //cr = fs.readFile()
 
+        binding.nameTextViewForVar.setText(cr?.name)
+
         binding.settingImageButton.setOnClickListener {
             val intent = Intent(this, SettingCrossRoad::class.java)
             startActivity(intent)
