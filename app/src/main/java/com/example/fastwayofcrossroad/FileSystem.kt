@@ -3,11 +3,11 @@ package com.example.fastwayofcrossroad
 import java.io.*
 
 class FileSystem (val filepath : String) {
-    var filePath : String? = null
+    var filePath : String = ""
     val file : File = File(filepath)
     init {
-        if(filePath == null)
-            filePath = filePath
+        if(filePath == "")
+            filePath = filepath
     }
 
     fun readFile() : CrossRoad? {
@@ -24,8 +24,8 @@ class FileSystem (val filepath : String) {
         var list_counter = 0
         var name : String? = null
         var time : Int? = null
-        var roadnums = IntArray(4)
-        var crosswalknums = IntArray(4)
+        var roadnums = Array<Int>(4) {0}
+        var crosswalknums = Array<Int>(4) {0}
 
         temp = buffer.readLine()
         name = temp
