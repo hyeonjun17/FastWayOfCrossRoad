@@ -30,6 +30,8 @@ class SettingCrossRoad : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        val fs = FileSystem("${filesDir.toString()}/CrossRoadData.txt")
+
         binding.nameEditText.addTextChangedListener {
             name = it.toString()
             Log.d("debug", "$name")
@@ -98,6 +100,12 @@ class SettingCrossRoad : AppCompatActivity() {
             }
         }
 
+        binding.backButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
         binding.completeButton.setOnClickListener {
             if(name != null && time != null && crossroad1 != null && crossroad2 != null && crossroad3 != null && crossroad4 != null && crosswalk1 != null
                 && crosswalk2 != null && crosswalk3 != null && crosswalk4 != null) {
@@ -118,6 +126,9 @@ class SettingCrossRoad : AppCompatActivity() {
                     intent.putExtra("crosswalk3", crosswalk3!!)
                     intent.putExtra("crosswalk4", crosswalk4!!)
                     Log.d("debug", "putExtras")
+                    fs.writeFile(CrossRoad(name!!, time!!, arrayOf<Int>(crossroad1!!, crossroad2!!, crossroad3!!, crossroad4!!),
+                        arrayOf(crosswalk1!!, crosswalk2!!, crosswalk3!!, crosswalk4!!)))
+                    Toast.makeText(applicationContext, "Saved Data", Toast.LENGTH_LONG).show()
                     startActivity(intent)
                     finish()
                 } else {

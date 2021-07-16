@@ -1,6 +1,8 @@
 package com.example.fastwayofcrossroad
 
+import android.annotation.SuppressLint
 import android.app.SharedElementCallback
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -13,16 +15,18 @@ import com.example.fastwayofcrossroad.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
-    val fs = FileSystem("/CrossRoadData.txt")
     var cr = CrossRoad("", 0, arrayOf(0), arrayOf(0))
     var openedRoad: Int = 0
     var startPoint: Int = 0
     var endPoint: Int = 0
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         Log.d("debug", "MainActivity created")
+
+        val fs = FileSystem("${filesDir.toString()}/CrossRoadData.txt")
 
         if(binding.road21.visibility == View.VISIBLE)
             binding.road21.visibility = View.INVISIBLE
@@ -32,6 +36,11 @@ class MainActivity : AppCompatActivity() {
             binding.road34.visibility = View.INVISIBLE
         if(binding.road41.visibility == View.VISIBLE)
             binding.road41.visibility = View.INVISIBLE
+
+        binding.loadButton.setOnClickListener {
+            fs.readFile(cr)
+            Toast.makeText(applicationContext, "Loaded Data", Toast.LENGTH_LONG).show()
+        }
 
         binding.startpointRadioGroup.setOnCheckedChangeListener { group, checkedId ->
             when (checkedId) {
@@ -64,7 +73,10 @@ class MainActivity : AppCompatActivity() {
 
         makingCrossRoad()
 
-        binding.nameTextViewForVar.setText(cr.name.toString())
+        if(cr.name != "")
+            binding.nameTextViewForVar.setText(cr.name.toString())
+        else
+            binding.nameTextViewForVar.setText("None")
 
         binding.calculateButton.setOnClickListener {
             Log.d("debug", "pressed calculate button")

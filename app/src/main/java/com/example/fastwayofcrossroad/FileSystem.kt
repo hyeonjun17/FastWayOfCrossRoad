@@ -1,31 +1,23 @@
 package com.example.fastwayofcrossroad
 
+import android.util.Log
 import java.io.*
 
-class FileSystem (val filepath : String) {
-    var filePath : String = ""
-    val file : File = File(filepath)
-    init {
-        if(filePath == "")
-            filePath = filepath
-    }
+class FileSystem (filepath : String) {
+    private val file = File(filepath)
 
-    fun readFile() : CrossRoad? {
-        val file = File(filePath)
-
+    fun readFile(cr : CrossRoad) {
         if(!file.exists())
-            return null
+            return
 
         val reader = FileReader(file)
         val buffer = BufferedReader(reader)
 
         var temp = ""
-        var counter = 0
-        var list_counter = 0
-        var name : String? = null
-        var time : Int? = null
-        var roadnums = Array<Int>(4) {0}
-        var crosswalknums = Array<Int>(4) {0}
+        var name = ""
+        var time = 0
+        val roadnums = Array<Int>(4) {0}
+        val crosswalknums = Array<Int>(4) {0}
 
         temp = buffer.readLine()
         name = temp
@@ -41,36 +33,39 @@ class FileSystem (val filepath : String) {
         }
         buffer.close()
 
-        return  CrossRoad(temp, time, roadnums, crosswalknums)
+        cr.name = name
+        cr.time = time
+        cr.roadnums = roadnums
+        cr.crosswalknums = crosswalknums
+        Log.d("debug", "read name : $name time : $time")
+        for (i in 0..3) {
+            Log.d("debug", "roadnums[$i] : ${roadnums[i]}")
+        }
+        for (i in 0..3) {
+            Log.d("debug", "crosswalknums[$i] : ${crosswalknums[i]}")
+        }
     }
 
-    fun writeFile (crossRoad : CrossRoad?) : Boolean {
-        if(crossRoad == null)
-            return false
+    fun writeFile (cr : CrossRoad) {
+        if(!file.exists()) {
+            file.createNewFile()
+        }
 
-        val file = File(filePath)
-        if(!file.exists())
-            return false
-
-        val writer = FileWriter(filePath)
+        val writer = FileWriter(file)
         val buffer = BufferedWriter(writer)
 
-        var string = ""
-        string = crossRoad.name + '\n'
-        string += crossRoad.time.toString()
-        string += '\n'
-        for(index in 0..3) {
-            string += crossRoad.roadnums[index]
-            string += '\n'
+        buffer.append(cr.name)
+        buffer.newLine()
+        buffer.append(cr.time.toString())
+        buffer.newLine()
+        for (i in 0..3) {
+            buffer.append(cr.roadnums[i].toString())
+            buffer.newLine()
         }
-        for(index in 0..3) {
-            string += crossRoad.crosswalknums[index]
-            string += '\n'
+        for (i in 0..3) {
+            buffer.append(cr.crosswalknums[i].toString())
+            buffer.newLine()
         }
-
-        buffer.write(string)
         buffer.close()
-
-        return true
     }
 }
