@@ -17,8 +17,12 @@ class MainActivity : AppCompatActivity() {
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     var cr = CrossRoad("", 0, arrayOf(0), arrayOf(0))
     var openedRoad: Int = 0
+    var openedCrosswalk : Int = 0
     var startPoint: Int = 0
     var endPoint: Int = 0
+
+    val inc = 0
+    val dec = 1
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.radioButton3 -> startPoint = 2
                 R.id.radioButton4 -> startPoint = 3
             }
+            Log.d("debug", "startPoint : $startPoint")
         }
 
         binding.endpointRadioGroup.setOnCheckedChangeListener { group, checkedId ->
@@ -58,6 +63,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.radioButton3_ -> endPoint = 2
                 R.id.radioButton4_ -> endPoint = 3
             }
+            Log.d("debug", "endPoint : $endPoint")
         }
 
         binding.crossroadRadioGroup.setOnCheckedChangeListener { group, checkedId ->
@@ -67,6 +73,15 @@ class MainActivity : AppCompatActivity() {
                 R.id.radioButton3__ -> openedRoad = 2
                 R.id.radioButton4__ -> openedRoad = 3
             }
+            Log.d("debug", "openedRoad : $openedRoad")
+            openedCrosswalk = 0
+            for (i in 0..3) {
+                if (cr.roadnums[openedRoad] == cr.crosswalknums[i]) {
+                    openedCrosswalk = i
+                    break
+                }
+            }
+            Log.d("debug", "openedCrosswalk : $openedCrosswalk")
         }
 
         //cr = fs.readFile()
@@ -80,37 +95,114 @@ class MainActivity : AppCompatActivity() {
 
         binding.calculateButton.setOnClickListener {
             Log.d("debug", "pressed calculate button")
-            var shortRoadNum = 0
-            val shortRoadList = mutableListOf<Pair<Int, Int>>()
+            Log.d("debug", "startPoint : $startPoint")
+            Log.d("debug", "endPoint : $endPoint")
+            Log.d("debug", "openedRoad : $openedRoad")
+
             val zeroArr = arrayOf(0)
             if (cr.name == "" || cr.time == 0 || cr.crosswalknums.contentEquals(zeroArr)
                 || cr.roadnums.contentEquals(zeroArr)
             ) {
             } else {
-                val graph = makingGraph()
+                val graph = Array<Array<Int>>(4) { Array<Int>(4) { Int.MAX_VALUE } }
+                makingGraph(graph)
+                for (i in 0..3) {
+                    for (j in 0..3) {
+                        Log.d("debug", "i : $i j : $j graph : ${graph[i][j]}")
+                    }
+                }
                 if (!graph.contentEquals(arrayOf(arrayOf(0)))) {
-                    val floydedGraph = graph.copyOf()
+                    val floydedGraph = Array<Array<Int>>(4){ Array<Int>(4) {Int.MAX_VALUE} }
+                    for(i in 0..3) {
+                        for(j in 0..3) {
+                            floydedGraph[i][j] = graph[i][j]
+                        }
+                    }
                     floydWarshall(floydedGraph)
                     for (i in 0..3) {
                         for (j in 0..3) {
-                            Log.d("debug", "i : $i j : $j floydedG : ${floydedGraph[i][j]}")
+                            Log.d("debug", "i : $i j : $j floydedGraph : ${floydedGraph[i][j]}")
                         }
                     }
+                    /*
+                    if(startPoint == 1) {
+                        if(endPoint == 0) {
+                            if(floydedGraph[startPoint][endPoint] == graph[1][2] + graph[2][3] + graph[3][0]) {
+                                shortRoadNum = 3
+                                shortRoadList.add(Pair(1, 2))
+                                shortRoadList.add(Pair(2, 3))
+                                shortRoadList.add(Pair(3, 0))
+                            } else if(floydedGraph[startPoint][endPoint] == graph[1][0]) {
+                                shortRoadNum = 1
+                                shortRoadList.add(Pair(1, 0))
+                            }
+                        }
+                    } else if(starPoint)*/
 
+                    var shortRoadNum = 0
+                    val shortRoadList = mutableListOf<Pair<Int, Int>>()
+
+                    var largePoint : Int; var smallPoint : Int
+                    if(startPoint < endPoint) {
+                        largePoint = endPoint
+                        smallPoint = startPoint
+                    } else {
+                        largePoint = startPoint
+                        smallPoint = endPoint
+                    }
+
+                    if(largePoint - smallPoint == 1) {
+                        val largePoint_ = roadnumIncreaser(largePoint, 0, 3)
+                        val largePoint__ = roadnumIncreaser(largePoint_, 0, 3)
+                        if(floydedGraph[smallPoint][largePoint] == graph[largePoint][largePoint_] + graph[largePoint_][largePoint__] + graph[largePoint__][smallPoint]) {
+                            shortRoadNum = 3
+                            shortRoadList.add(Pair(largePoint, largePoint_))
+                            shortRoadList.add(Pair(largePoint_, largePoint__))
+                            shortRoadList.add(Pair(largePoint__, smallPoint))
+                        } else if(floydedGraph[smallPoint][largePoint] == graph[smallPoint][largePoint]){
+                            shortRoadNum = 1
+                            shortRoadList.add(Pair(smallPoint, largePoint))
+                        }
+                    } else if(largePoint - smallPoint == 2) {
+                        val largePoint_ = roadnumIncreaser(largePoint, 0, 3)
+                        val smallPoint_ = roadnumIncreaser(smallPoint, 0, 3)
+                        if(floydedGraph[smallPoint][largePoint] == graph[largePoint][largePoint_] + graph[largePoint_][smallPoint]) {
+                            shortRoadNum = 2
+                            shortRoadList.add(Pair(largePoint, largePoint_))
+                            shortRoadList.add(Pair(largePoint_, smallPoint))
+                        } else if(floydedGraph[smallPoint][largePoint] == graph[smallPoint][smallPoint_] + graph[smallPoint_][largePoint]) {
+                            shortRoadNum = 2
+                            shortRoadList.add(Pair(smallPoint, smallPoint_))
+                            shortRoadList.add(Pair(smallPoint_, largePoint))
+                        }
+                    } else if(largePoint - smallPoint == 3) {
+                        val smallPoint_ = roadnumIncreaser(smallPoint, 0, 3)
+                        val smallPoint__ = roadnumIncreaser(smallPoint_, 0, 3)
+                        if(floydedGraph[smallPoint][largePoint] == graph[smallPoint][smallPoint_] + graph[smallPoint_][smallPoint__] + graph[smallPoint__][largePoint]) {
+                            shortRoadNum = 3
+                            shortRoadList.add(Pair(smallPoint, smallPoint_))
+                            shortRoadList.add(Pair(smallPoint_, smallPoint__))
+                            shortRoadList.add(Pair(smallPoint__, largePoint))
+                        } else if(floydedGraph[smallPoint][largePoint] == graph[smallPoint][largePoint]) {
+                            shortRoadNum = 1
+                            shortRoadList.add(Pair(smallPoint, largePoint))
+                        }
+                    }
+                    /*
                     when (startPoint) {
                         0 -> {
                             when (endPoint) {
                                 0 -> {
                                 }
                                 1 -> {
-                                    if (floydedGraph[0][1] == graph[0][1]) {
-                                        shortRoadNum = 1
-                                        shortRoadList.add(Pair(0, 1))
-                                    } else {
+                                    if(floydedGraph[0][1] == graph[0][3] + graph[3][2] + graph[2][1]){
                                         shortRoadNum = 3
                                         shortRoadList.add(Pair(0, 3))
                                         shortRoadList.add(Pair(3, 2))
                                         shortRoadList.add(Pair(2, 1))
+                                    } else if (floydedGraph[0][1] == graph[0][1]) {
+                                        shortRoadNum = 1
+                                        shortRoadList.add(Pair(0, 1))
                                     }
                                 }
                                 2 -> {
@@ -125,14 +217,14 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                                 3 -> {
-                                    if (floydedGraph[0][3] == graph[0][3]) {
-                                        shortRoadNum = 1
-                                        shortRoadList.add(Pair(0, 3))
-                                    } else {
+                                    if(floydedGraph[0][3] == graph[0][1] + graph[1][2] + graph[2][3]) {
                                         shortRoadNum = 3
                                         shortRoadList.add(Pair(0, 1))
                                         shortRoadList.add(Pair(1, 2))
                                         shortRoadList.add(Pair(2, 3))
+                                    } else if (floydedGraph[0][3] == graph[0][3]) {
+                                        shortRoadNum = 1
+                                        shortRoadList.add(Pair(0, 3))
                                     }
                                 }
                             }
@@ -140,27 +232,27 @@ class MainActivity : AppCompatActivity() {
                         1 -> {
                             when (endPoint) {
                                 0 -> {
-                                    if (floydedGraph[1][0] == graph[1][0]) {
-                                        shortRoadNum = 1
-                                        shortRoadList.add(Pair(1, 0))
-                                    } else {
+                                    if(floydedGraph[1][0] == graph[1][2] + graph[2][3] + graph[3][0]) {
                                         shortRoadNum = 3
                                         shortRoadList.add(Pair(1, 2))
                                         shortRoadList.add(Pair(2, 3))
                                         shortRoadList.add(Pair(3, 0))
+                                    } else if (floydedGraph[1][0] == graph[1][0]) {
+                                        shortRoadNum = 1
+                                        shortRoadList.add(Pair(1, 0))
                                     }
                                 }
                                 1 -> {
                                 }
                                 2 -> {
-                                    if (floydedGraph[1][2] == graph[1][2]) {
-                                        shortRoadNum = 1
-                                        shortRoadList.add(Pair(1, 2))
-                                    } else {
+                                    if(floydedGraph[1][2] == graph[1][0] + graph[0][3] + graph[3][2]) {
                                         shortRoadNum = 3
                                         shortRoadList.add(Pair(1, 0))
                                         shortRoadList.add(Pair(0, 3))
                                         shortRoadList.add(Pair(3, 2))
+                                    } else if (floydedGraph[1][2] == graph[1][2]) {
+                                        shortRoadNum = 1
+                                        shortRoadList.add(Pair(1, 2))
                                     }
                                 }
                                 3 -> {
@@ -254,7 +346,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                    }
+                    }*/
                     if (shortRoadNum == 0) {
                         Toast.makeText(
                             applicationContext,
@@ -343,27 +435,125 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun makingGraph(): Array<Array<Int>> {
+    fun makingGraph(resultGraph : Array<Array<Int>>) {
         val zeroArr = arrayOf(0, 0, 0, 0)
         if (cr.name == "" || cr.time == 0 || cr.roadnums.contentEquals(zeroArr) || cr.crosswalknums.contentEquals(
                 zeroArr
             )
-        )
-            return arrayOf(arrayOf(0))
-        val Graph = Array<Array<Int>>(4) { Array<Int>(4) { Int.MAX_VALUE } }
+        ) {
+            for(i in 0..3) {
+                for(j in 0..3) {
+                    resultGraph[i][j] = 0
+                }
+            }
+            return
+        }
 
-        val roadcounter = cr.roadnums[openedRoad]
-        val walkcounter = roadcounter
-        var openedCrosswalk = 0
-        for (i in 0..3) {
-            if (walkcounter == cr.crosswalknums[i]) {
-                openedCrosswalk = i
-                break
+        //Log.d("debug", "openedCrosswalk = $openedCrosswalk")
+
+        //var timecounter = cr.time
+
+        //value of crosswalknums[] is crosswalk order, index value is road number
+
+        Log.d("debug", "original cr.crosswalknums[openedCrosswalk] : ${cr.crosswalknums[openedCrosswalk]}")
+        val new_crosswalknums = cr.crosswalknums.copyOf()
+        while(new_crosswalknums[openedCrosswalk] != 1) {
+            for(i in 0..3) {
+                if(new_crosswalknums[i] == 4) {
+                    new_crosswalknums[i] = 1
+                } else {
+                    new_crosswalknums[i]++
+                }
             }
         }
 
-        var timecounter = cr.time
+        val crosswalkGraph = Array<Array<Int>>(4) { Array<Int>(4) { Int.MAX_VALUE } }
 
+        crosswalkGraph[0][3] = new_crosswalknums[3]
+        crosswalkGraph[3][0] = new_crosswalknums[3]
+        for(i in 0..2) {
+            crosswalkGraph[i + 1][i] = new_crosswalknums[i]
+            crosswalkGraph[i][i + 1] = new_crosswalknums[i]
+        }
+        for(i in 0..3) {
+            for(j in 0..3) {
+                Log.d("debug", "i : $i j : $j crosswalkGraph[$i][$j] : ${crosswalkGraph[i][j]}")
+            }
+        }
+
+        //now simulation divided into 2 ways, left, right
+
+        //val resultGraph = Array<Array<Int>>(4) { Array<Int>(4) { Int.MAX_VALUE } }
+
+        //left
+        var previous_vertex = 0; var present_vertex = startPoint; var next_vertex = 0
+        while(true) {
+            if(present_vertex == 0) {
+                previous_vertex = 3
+            } else {
+                previous_vertex = present_vertex - 1
+            }
+            if(present_vertex == 3) {
+                next_vertex = 0
+            } else {
+                next_vertex = present_vertex + 1
+            }
+            val A = crosswalkGraph[previous_vertex][present_vertex]; val B = crosswalkGraph[present_vertex][next_vertex]
+            if(present_vertex == startPoint) {
+                resultGraph[present_vertex][next_vertex] = B * cr.time
+                resultGraph[next_vertex][present_vertex] = B * cr.time
+            } else if(A < B) {
+                resultGraph[present_vertex][next_vertex] = (B - A) * cr.time
+                resultGraph[next_vertex][present_vertex] = (B - A) * cr.time
+            } else {
+                resultGraph[present_vertex][next_vertex] = (B + 4 - A) * cr.time
+                resultGraph[next_vertex][present_vertex] = (B + 4 - A) * cr.time
+            }
+            if(next_vertex == endPoint) {
+                break
+            }
+            if(present_vertex == 3) {
+                present_vertex = 0
+            } else {
+                present_vertex++
+            }
+        }
+        //right
+        previous_vertex = 0; present_vertex = startPoint; next_vertex = 0
+        while(true) {
+            if(present_vertex == 3) {
+                previous_vertex = 0
+            } else {
+                previous_vertex = present_vertex + 1
+            }
+            if(present_vertex == 0) {
+                next_vertex = 3
+            } else {
+                next_vertex = present_vertex - 1
+            }
+            val A = crosswalkGraph[previous_vertex][present_vertex]; val B = crosswalkGraph[present_vertex][next_vertex]
+            if(present_vertex == startPoint) {
+                resultGraph[present_vertex][next_vertex] = B * cr.time
+                resultGraph[next_vertex][present_vertex] = B * cr.time
+            } else if(A < B) {
+                resultGraph[present_vertex][next_vertex] = (B - A) * cr.time
+                resultGraph[next_vertex][present_vertex] = (B - A) * cr.time
+            } else {
+                resultGraph[present_vertex][next_vertex] = (B + 4 - A) * cr.time
+                resultGraph[next_vertex][present_vertex] = (B + 4 - A) * cr.time
+            }
+            if(next_vertex == endPoint) {
+                break
+            }
+            if(present_vertex == 0) {
+                present_vertex = 3
+            } else {
+                present_vertex--
+            }
+        }
+
+        //old and wrong algorithm
+/*
         while (true) {
             if (startPoint == 0) {
                 if (openedCrosswalk == startPoint || openedCrosswalk == startPoint + 3) {
@@ -399,32 +589,35 @@ class MainActivity : AppCompatActivity() {
                 openedCrosswalk = 0
             else
                 openedCrosswalk += 1
-        }
+        }*/
 
         for (i in 0..3) {
             for (j in 0..3) {
-                Log.d("debug", "i : $i j : $j Graph : ${Graph[i][j]}")
+                Log.d("debug", "i : $i j : $j resultGraph[$i][$j] : ${resultGraph[i][j]}")
             }
         }
-
-        return Graph
     }
 
     fun floydWarshall(G: Array<Array<Int>>) {
         for (k in 0..3) {
             for (i in 0..3) {
                 for (j in 0..3) {
-                    if(G[i][k] == Int.MAX_VALUE || G[k][j] == Int.MAX_VALUE) {
-
-                    } else if (G[i][j] == Int.MAX_VALUE) {
-                        if (G[i][k] + G[k][j] >= 0)
-                            G[i][j] = G[i][k] + G[k][j]
+                    if(G[i][k] == Int.MAX_VALUE || G[k][j] == Int.MAX_VALUE || i == k || j == k || i == j) {
+                        continue
                     } else if (G[i][k] + G[k][j] < G[i][j]) {
-                        if (G[i][k] + G[k][j] >= 0)
-                            G[i][j] = G[i][k] + G[k][j]
+                        G[i][j] = G[i][k] + G[k][j]
                     }
                 }
             }
         }
+    }
+
+    fun roadnumIncreaser(number : Int, min : Int, max : Int) : Int {
+        var num = number
+        num++
+        if (num > max){
+            num = min
+        }
+        return num
     }
 }
